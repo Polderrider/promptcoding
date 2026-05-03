@@ -36,3 +36,5 @@ dist/
 # OS / editor
 .DS_Store
 .vscode/
+
+yt-practice-backend/app/__pycache__/
