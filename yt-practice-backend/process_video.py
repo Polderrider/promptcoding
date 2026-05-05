@@ -19,6 +19,7 @@ latest = feed.entries[0]
 video_id = latest.yt_videoid
 title = latest.title
 url = latest.link
+thumbnail_url = f"https://img.youtube.com/vi/{video_id}/hqdefault.jpg"
 print("video_id:", latest.yt_videoid)
 print("title:", latest.title)
 print("url:", latest.link)
@@ -30,7 +31,7 @@ translated = translate_nouns(nouns)
 
 with get_connection() as conn:
     with conn.cursor() as cur:
-        video_db_id = insert_video(cur, video_id, url, title, transcript)
+        video_db_id = insert_video(cur, video_id, url, thumbnail_url, title, transcript)
 
         if video_db_id is None:
             conn.commit()

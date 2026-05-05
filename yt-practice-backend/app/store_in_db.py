@@ -4,20 +4,21 @@ import json
 
 
 
-def insert_video(cur, video_id, url, title, transcript):
+def insert_video(cur, video_id, url, thumbnail_url, title, transcript):
     print(f"transcript: {type(transcript)}")
     pprint(transcript)
 
 
     cur.execute("""
-        INSERT INTO videos (youtube_video_id, youtube_url, title, transcript_text, transcript_segments)
-        VALUES (%s, %s, %s, %s, %s)
+        INSERT INTO videos (youtube_video_id, youtube_url, title, thumbnail_url, transcript_text, transcript_segments)
+        VALUES (%s, %s, %s, %s, %s, %s)
         ON CONFLICT (youtube_video_id) DO NOTHING
         RETURNING id
     """, (
         video_id, 
         url, 
         title, 
+        thumbnail_url,
         transcript["text"], 
         json.dumps(transcript["segments"])          # SNIPPETS postgres-doesn’t-auto-convert-list/dicts-to-JSON
     ))

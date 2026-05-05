@@ -7,10 +7,8 @@ def translate_nouns(nouns):
     for word, freq in nouns:
         try:
             eng = GoogleTranslator(source="nl", target="en").translate(word)
-            if word == eng:
-                print(f"translate.py word: {word}")
-                
-                print(f"translate.py translated word eng: {eng}")
+            # print(f"word: {word}")
+            # print(f"eng: {eng}")
 
         except Exception:
             eng = word
@@ -20,5 +18,5 @@ def translate_nouns(nouns):
             "translation": eng,
             "frequency": freq
         })
-
+    # print(f"translated list: {translated}")
     return translated
