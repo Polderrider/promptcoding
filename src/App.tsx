@@ -1,10 +1,11 @@
 import "./App.css";
 import { useEffect, useState } from "react";
 
+type Page = "landing" | "quiz" | "score";
 
 function App() {
-  
   const [latestVideo, setVideo] = useState<any>(null);
+  const [page, setPage] = useState<Page>("landing");
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [feedback, setFeedback] = useState<any>(null);
   const [score, setScore] = useState<any>(null);
@@ -19,117 +20,125 @@ function App() {
     fetch("http://localhost:8000/answers", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        question_id: questionId,
-        selected_answer: selected,
-      }),
+      body: JSON.stringify({ question_id: questionId, selected_answer: selected }),
     })
       .then((res) => res.json())
-      .then((data) => {
-        console.log(data);
-        setFeedback(data);
-    });
+      .then((data) => setFeedback(data));
   }
 
-  function getScore() {
-  fetch("http://localhost:8000/score")
-    .then((res) => res.json())
-    .then((data) => setScore(data));
-}
+  function finishQuiz() {
+    fetch("http://localhost:8000/score")
+      .then((res) => res.json())
+      .then((data) => {
+        setScore(data);
+        setPage("score");
+      });
+  }
 
-  if (!latestVideo) return <div>Loading...</div>;
+  function nextQuestion() {
+    setFeedback(null);
+
+    if (currentQuestionIndex + 1 >= latestVideo.questions.length) {
+      finishQuiz();
+      return;
+    }
+
+    setCurrentQuestionIndex((prev) => prev + 1);
+  }
+
+  if (!latestVideo) return <div className="loading">Loading...</div>;
 
   const currentQuestion = latestVideo.questions[currentQuestionIndex];
 
   return (
-  <main className="app">
-    <section className="hero">
+    <main className="app">
       <nav className="topbar">
-        <div className="logo">LinguaLift</div>
-        <button className="library-button">Library</button>
+        <div className="brand">study app</div>
+        <button>Video Library</button>
+        <button>Reviews</button>
+        <button>Visitor Count</button>
       </nav>
 
-      <div className="video-card">
-        <img
-          src={latestVideo.thumbnail_url || "/src/assets/hero.png"}
-          alt=""
-          className="thumbnail"
-        />
+      {page === "landing" && (
+        <section className="landing">
+          <h1>Welcome to NOS Study</h1>
+          <p className="intro">
+            Your partner to test knowledge on today&apos;s NOS video in easy Dutch.
+          </p>
+          <p className="visitor">You are today&apos;s 42nd visitor.</p>
 
-        <div className="video-content">
-          <p className="eyebrow">Latest practice set</p>
-          <h1>{latestVideo.title}</h1>
-          <p className="channel">{latestVideo.channel_name || "YouTube video"}</p>
-          <div className="stats">
-            <span>{latestVideo.questions.length} questions</span>
-            <span>Vocabulary practice</span>
+          <div className="latest-panel">
+            <img
+              src={latestVideo.thumbnail_url || "/src/assets/hero.png"}
+              alt=""
+              className="video-thumb"
+            />
+
+            <div className="latest-content">
+              <h2>{latestVideo.title}</h2>
+
+              <div className="level-row">
+                <button onClick={() => setPage("quiz")}>Novice</button>
+                <button onClick={() => setPage("quiz")}>Beginner</button>
+                <button onClick={() => setPage("quiz")}>Intermediate</button>
+                <button onClick={() => setPage("quiz")}>Advanced</button>
+              </div>
+
+              <p className="score-note">
+                Your score on Easy: — That&apos;s the 3rd highest score today.
+              </p>
+            </div>
           </div>
-        </div>
-      </div>
-    </section>
-
-    <section className="quiz-card">
-      <div className="progress-track">
-        <div
-          className="progress-fill"
-          style={{
-            width: `${((currentQuestionIndex + 1) / latestVideo.questions.length) * 100}%`,
-          }}
-        />
-      </div>
-
-      <p className="question-count">
-        Question {currentQuestionIndex + 1} of {latestVideo.questions.length}
-      </p>
-
-      <h2>{currentQuestion.question_text}</h2>
-
-      <div className="answer-grid">
-        {currentQuestion.options.map((opt: string) => (
-          <button
-            key={opt}
-            className="answer"
-            onClick={() => submitAnswer(currentQuestion.id, opt)}
-          >
-            {opt}
-          </button>
-        ))}
-      </div>
-
-      {feedback && (
-        <div className={feedback.is_correct ? "feedback correct-feedback" : "feedback"}>
-          {feedback.is_correct ? "Correct" : `Incorrect — correct answer: ${feedback.correct_answer}`}
-        </div>
+        </section>
       )}
 
-      <button
-        className="secondary-button"
-        onClick={() => {
-          setFeedback(null);
-          setCurrentQuestionIndex((prev) => prev + 1);
-        }}
-      >
-        Next question
-      </button>
+      {page === "quiz" && (
+        <section className="quiz-page">
+          <div className="progress-track">
+            <div
+              className="progress-fill"
+              style={{
+                width: `${((currentQuestionIndex + 1) / latestVideo.questions.length) * 100}%`,
+              }}
+            />
+          </div>
 
-      <button className="secondary-button" onClick={getScore}>
-        Get score
-      </button>
+          <h2 className="question-title">{currentQuestion.question_text}</h2>
 
-      {score && (
-        <div className="feedback correct-feedback">
-          Score: {score.total_correct}/{score.total_answered} ({score.percentage}%)
-        </div>
-)}
-    </section>
+          <div className="answer-row">
+            {currentQuestion.options.map((opt: string) => (
+              <button
+                key={opt}
+                className="answer"
+                onClick={() => submitAnswer(currentQuestion.id, opt)}
+              >
+                {opt}
+              </button>
+            ))}
+          </div>
 
+          {feedback && (
+            <div className={feedback.is_correct ? "feedback correct" : "feedback incorrect"}>
+              {feedback.is_correct
+                ? "Correct"
+                : `Incorrect — correct answer: ${feedback.correct_answer}`}
+              <button onClick={nextQuestion}>Next</button>
+            </div>
+          )}
+        </section>
+      )}
 
-
-  </main>
-);
+      {page === "score" && score && (
+        <section className="score-page">
+          <h1>Your result</h1>
+          <p>
+            Score: {score.total_correct}/{score.total_answered} ({score.percentage}%)
+          </p>
+          <button onClick={() => window.location.reload()}>Replay quiz</button>
+        </section>
+      )}
+    </main>
+  );
 }
-   
-  
-
 
 export default App;
