@@ -38,3 +38,7 @@ dist/
 .vscode/
 
 yt-practice-backend/app/__pycache__/
+
+# dev files
+dev_*.py
+yt-practice-backend/dev_data/

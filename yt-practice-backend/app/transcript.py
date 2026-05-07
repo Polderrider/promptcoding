@@ -20,7 +20,11 @@ def create_sentences(snippets):
     for item in snippets:
         full_transcript = full_transcript + " " + item.text
 
-    print(f"full_transcript: {full_transcript}")
+    # print(f"full_transcript: {full_transcript}")
+
+
+    # Normalize text first:
+    full_transcript = full_transcript.replace("\n", " ")
 
     # split full text into sentences
     sentences = re.split(r'(?<=[.!?])\s+(?=[A-Z])', full_transcript)

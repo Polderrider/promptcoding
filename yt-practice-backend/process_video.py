@@ -1,7 +1,7 @@
 import feedparser
 
 from app.transcript import extract_video_id, fetch_transcript
-from app.nlp import extract_nouns
+from app.nlp import extract_nouns, extract_verbs, extract_topics
 from app.translate import translate_nouns
 from app.questions import generate_mcq
 from app.store_in_db import insert_video, insert_noun, insert_question
@@ -14,6 +14,11 @@ print("SCRIPT RUNNING")
 feed_url = "https://www.youtube.com/feeds/videos.xml?channel_id=UCch2JvY2ZSwcjf5gb93HGQw"
 
 feed = feedparser.parse(feed_url)
+# if not feed.entries:
+#     print("No entries returned — check feed URL or response")
+#     print("status:", feed.status)
+#     exit()
+# print(f"feed: {feed}")
 latest = feed.entries[0]
 
 video_id = latest.yt_videoid
@@ -26,7 +31,14 @@ print("url:", latest.link)
 
 transcript = fetch_transcript(video_id)
 
+topics = extract_topics(transcript["text"])
+verbs = extract_verbs(transcript["text"])
 nouns = extract_nouns(transcript["text"])
+
+print(f"topics: {topics}")
+
+# sentences = extract_sentences(transcript["sentences"])
+
 translated = translate_nouns(nouns)
 
 with get_connection() as conn:
